@@ -29,6 +29,7 @@
 #include "bat/ads/internal/database/tables/creative_ad_notifications_database_table.h"
 #include "bat/ads/internal/database/tables/creative_new_tab_page_ads_database_table.h"
 #include "bat/ads/internal/eligible_ads/eligible_ads_filter_factory.h"
+#include "bat/ads/internal/experiments/experiments.h"
 #include "bat/ads/internal/filters/ads_history_date_range_filter.h"
 #include "bat/ads/internal/filters/ads_history_filter_factory.h"
 #include "bat/ads/internal/frequency_capping/exclusion_rules/conversion_frequency_cap.h"
@@ -114,6 +115,7 @@ AdsImpl::AdsImpl(
       client_(std::make_unique<Client>(this)),
       confirmations_(std::make_unique<Confirmations>(this)),
       database_(std::make_unique<database::Initialize>(this)),
+      experiments_(std::make_unique<Experiments>(this)),
       get_catalog_(std::make_unique<GetCatalog>(this)),
       p2a_(std::make_unique<P2A>(this)),
       page_classifier_(std::make_unique<classification::PageClassifier>(this)),
@@ -227,6 +229,8 @@ void AdsImpl::InitializeStep6(
   redeem_unblinded_payment_tokens_->MaybeRedeemAfterDelay(wallet_);
 
   ad_conversions_->StartTimerIfReady();
+
+  experiments_->Log();
 
   MaybeServeAdNotification(false);
 

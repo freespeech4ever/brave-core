@@ -5,6 +5,8 @@
 
 #include "bat/ads/internal/server/redeem_unblinded_token/create_confirmation_util.h"
 
+#include <utility>
+
 #include "base/base64url.h"
 #include "base/json/json_writer.h"
 #include "base/values.h"
@@ -12,6 +14,8 @@
 #include "brave/components/l10n/common/locale_util.h"
 #include "wrapper.hpp"
 #include "bat/ads/ads.h"
+#include "bat/ads/internal/experiments/experiments_util.h"
+#include "bat/ads/internal/experiments/page_probabilities/page_probabilities_experiment.h"
 #include "bat/ads/internal/locale/country_code_util.h"
 #include "bat/ads/internal/platform/platform_helper.h"
 
@@ -23,23 +27,23 @@ using challenge_bypass_ristretto::TokenPreimage;
 
 std::string CreateConfirmationRequestDTO(
     const ConfirmationInfo& confirmation) {
-  base::Value payload(base::Value::Type::DICTIONARY);
+  base::Value dto(base::Value::Type::DICTIONARY);
 
-  payload.SetKey("creativeInstanceId",
+  dto.SetKey("creativeInstanceId",
       base::Value(confirmation.creative_instance_id));
 
-  payload.SetKey("payload", base::Value(base::Value::Type::DICTIONARY));
+  dto.SetKey("payload", base::Value(base::Value::Type::DICTIONARY));
 
   const std::string blinded_payment_token_base64 =
       confirmation.blinded_payment_token.encode_base64();
-  payload.SetKey("blindedPaymentToken",
+  dto.SetKey("blindedPaymentToken",
       base::Value(blinded_payment_token_base64));
 
   const std::string type = std::string(confirmation.type);
-  payload.SetKey("type", base::Value(type));
+  dto.SetKey("type", base::Value(type));
 
   DCHECK(!_build_channel.name.empty());
-  payload.SetKey("buildChannel", base::Value(_build_channel.name));
+  dto.SetKey("buildChannel", base::Value(_build_channel.name));
 
   if (_build_channel.is_release) {
     const std::string locale =
@@ -47,19 +51,37 @@ std::string CreateConfirmationRequestDTO(
 
     if (locale::HasLargeAnonymity(locale)) {
       const std::string country_code = brave_l10n::GetCountryCode(locale);
-      payload.SetKey("countryCode", base::Value(country_code));
+      dto.SetKey("countryCode", base::Value(country_code));
+
+      experiments::PageProbabilities page_probabilities_experiment;
+      const std::string experiment_name =
+          page_probabilities_experiment.get_name();
+      if (!experiments::IsActive(experiment_name)) {
+        dto.SetKey("experiment", base::Value(base::Value::Type::DICTIONARY));
+      } else {
+        const experiments::ExperimentInfo experiment =
+            page_probabilities_experiment.Get(experiment_name);
+        base::Value dictionary(base::Value::Type::DICTIONARY);
+        dictionary.SetKey("name",
+            base::Value(experiment.name));
+        dictionary.SetKey("group",
+            base::Value(experiment.group));
+        dictionary.SetKey("value",
+            base::Value(experiment.value));
+        dto.SetKey("experiment", std::move(dictionary));
+      }
     } else {
       if (locale::IsAnonymous(locale)) {
-        payload.SetKey("countryCode", base::Value("??"));
+        dto.SetKey("countryCode", base::Value("??"));
       }
     }
   }
 
   const std::string platform = PlatformHelper::GetInstance()->GetPlatformName();
-  payload.SetKey("platform", base::Value(platform));
+  dto.SetKey("platform", base::Value(platform));
 
   std::string json;
-  base::JSONWriter::Write(payload, &json);
+  base::JSONWriter::Write(dto, &json);
 
   return json;
 }
