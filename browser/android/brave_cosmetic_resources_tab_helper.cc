@@ -15,6 +15,7 @@
 #include "brave/components/brave_shields/browser/ad_block_service.h"
 #include "brave/components/brave_shields/browser/ad_block_service_helper.h"
 #include "brave/components/brave_shields/browser/brave_shields_util.h"
+#include "brave/content/browser/cosmetic_filters_communication_impl.h"
 #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/common/chrome_isolated_world_ids.h"
@@ -320,6 +321,7 @@ void BraveCosmeticResourcesTabHelper::CSSRulesRoutine(
 void BraveCosmeticResourcesTabHelper::ProcessURL(
     content::RenderFrameHost* render_frame_host, const GURL& url,
     const bool& main_frame) {
+  content::CosmeticFiltersCommunicationImpl::GetInstance(render_frame_host, this);
   if (!ShouldDoCosmeticFiltering(web_contents(), url)) {
     return;
   }
@@ -363,6 +365,10 @@ bool BraveCosmeticResourcesTabHelper::OnMessageReceived(
 bool BraveCosmeticResourcesTabHelper::OnMessageReceived(
     const IPC::Message& message) {
   return false;
+}
+
+void BraveCosmeticResourcesTabHelper::HiddenClassIdSelectors() {
+  LOG(ERROR) << "!!!here10";
 }
 
 WEB_CONTENTS_USER_DATA_KEY_IMPL(BraveCosmeticResourcesTabHelper)

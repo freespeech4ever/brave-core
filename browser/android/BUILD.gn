@@ -16,7 +16,7 @@ source_set("android_browser_process") {
 
   deps = [
     "//base",
-    "//brave/browser/android/mojom",
+    "//brave/content/browser/mojom",
     "//brave/browser/android/preferences",
     "//brave/browser/brave_stats:stats_updater",
     "//brave/build/android:jni_headers",

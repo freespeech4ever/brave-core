@@ -6,9 +6,9 @@
 #ifndef BRAVE_COMPONENTS_COSMETIC_FILTERS_CONTENT_RENDERER_COSMETIC_FILTERS_JS_HANDLER_H_
 #define BRAVE_COMPONENTS_COSMETIC_FILTERS_CONTENT_RENDERER_COSMETIC_FILTERS_JS_HANDLER_H_
 
+#include "brave/content/browser/mojom/cosmetic_filters_communication.mojom.h"
 #include "content/public/renderer/render_frame.h"
 #include "content/public/renderer/render_frame_observer.h"
-#include "brave/browser/android/mojom/cosmetic_filters_communication.mojom.h"
 #include "mojo/public/cpp/bindings/remote.h"
 #include "v8/include/v8.h"
 

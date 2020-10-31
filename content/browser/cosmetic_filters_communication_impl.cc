@@ -3,18 +3,33 @@
  * License, v. 3.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "brave/browser/android/cosmetic_filters_communication_impl.h"
+#include "brave/content/browser/cosmetic_filters_communication_impl.h"
 
 #include "base/json/json_reader.h"
-#include "brave/browser/brave_browser_process_impl.h"
+//#include "brave/browser/brave_browser_process_impl.h"
 #include "brave/components/brave_shields/browser/ad_block_custom_filters_service.h"
 #include "brave/components/brave_shields/browser/ad_block_regional_service_manager.h"
 #include "brave/components/brave_shields/browser/ad_block_service.h"
+#include "brave/content/browser/cosmetic_filters_observer.h"
 #include "content/public/browser/render_frame_host.h"
 
+namespace content {
+
+// static
+void CosmeticFiltersCommunicationImpl::GetInstance(
+    content::RenderFrameHost* render_frame_host,
+    CosmeticFiltersObserver* cosmetic_filters_observer) {
+  CosmeticFiltersCommunicationImpl(render_frame_host, cosmetic_filters_observer);
+}
+
 CosmeticFiltersCommunicationImpl::CosmeticFiltersCommunicationImpl(
-    content::RenderFrameHost* render_frame_host)
-    : render_frame_host_(render_frame_host) {
+    content::RenderFrameHost* render_frame_host,
+    CosmeticFiltersObserver* cosmetic_filters_observer)
+    : render_frame_host_(render_frame_host),
+    cosmetic_filters_observer_(cosmetic_filters_observer) {
+  if (cosmetic_filters_observer_) {
+    cosmetic_filters_observer_->HiddenClassIdSelectors();
+  }
 }
 
 CosmeticFiltersCommunicationImpl::~CosmeticFiltersCommunicationImpl() {
@@ -66,7 +81,7 @@ std::unique_ptr<base::ListValue>
  }
 
 void CosmeticFiltersCommunicationImpl::HiddenClassIdSelectors(
-	const std::string& input) {
+	  const std::string& input) {
   base::Optional<base::Value> input_value = base::JSONReader::Read(input);
   if (!input_value || !input_value->is_dict()) {
   	// Nothing to work with
@@ -117,3 +132,5 @@ void CosmeticFiltersCommunicationImpl::HiddenClassIdSelectors(
   //         "(function() {"
   //           "let nextIndex = window.cosmeticStyleSheet.rules.length;";
 }
+
+}  // namespace content

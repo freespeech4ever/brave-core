@@ -7,11 +7,13 @@
 #define BRAVE_BROWSER_ANDROID_BRAVE_COSMETIC_RESOURCES_TAB_HELPER_H_
 
 #include "base/memory/weak_ptr.h"
+#include "brave/content/browser/cosmetic_filters_observer.h"
 #include "content/public/browser/web_contents_observer.h"
 #include "content/public/browser/web_contents_user_data.h"
 
 class BraveCosmeticResourcesTabHelper
-    : public content::WebContentsObserver,
+    : public content::CosmeticFiltersObserver,
+      public content::WebContentsObserver,
       public content::WebContentsUserData<BraveCosmeticResourcesTabHelper>,
       public base::SupportsWeakPtr<BraveCosmeticResourcesTabHelper> {
  public:
@@ -28,6 +30,7 @@ class BraveCosmeticResourcesTabHelper
   bool OnMessageReceived(const IPC::Message& message,
       content::RenderFrameHost* render_frame_host) override;
   bool OnMessageReceived(const IPC::Message& message) override;
+  //
   std::unique_ptr<base::ListValue> GetUrlCosmeticResourcesOnTaskRunner(
       const std::string& url);
   void GetUrlCosmeticResourcesOnUI(content::RenderFrameHost* render_frame_host,
@@ -36,6 +39,10 @@ class BraveCosmeticResourcesTabHelper
   void CSSRulesRoutine(const std::string& url,
       base::DictionaryValue* resources_dict,
       content::RenderFrameHost* render_frame_host);
+
+  // content::CosmeticFiltersObserver overrides:
+  void HiddenClassIdSelectors() override;
+  //
 
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 
